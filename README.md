@@ -116,7 +116,7 @@ echo "192.168.1.88 rabbit2" >> /etc/hosts
 Файл Cookie находится здесь: */var/lib/rabbitmq/.erlang.cookie*.  
 Убедившись, что содержимое файлов одинаковое, продолжим.
 
-- На второй ноде (rabbit2) перезапустим службу:  
+- На **второй ноде (rabbit2)** перезапустим службу:  
 
 ```
 systemctl restart rabbitmq-server
