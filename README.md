@@ -151,4 +151,72 @@ rabbitmqctl set_policy ha-all ".*" '{"ha-mode":"all"}'
 
 ![interface](img/cl_status1.JPG)   
 
-![interface](img/cl_status2.JPG) 
+![interface](img/cl_status2.JPG)   
+
+ - Далее нам необходимо выполнить команду, используя утилиту **rabbitmqadmin**, которая по дефолту не установлена. Находим ссылку на нее на официальном сайте, вытягиваем командой wget, даём полные права и запускаем прямо из текущего каталога:  
+
+![interface](img/rma2.JPG)  
+
+![interface](img/rma1.JPG)  
+
+- Далее мы подходим, пожалуй, к самой интересной части.   
+  Что ж, одна из нод погашена (нода1 - rabbit1):  
+
+![interface](img/not_run.JPG)  
+
+- Прописываем в скрипт **consumer.py** ip-адрес ноды2, пытаемся его выполнить и.....ошибка:    
+
+![interface](img/error1.JPG)  
+
+ - Заглянем в логи:
+
+![interface](img/logs.JPG)    
+
+Очень интересно. Он пытается пролезть под юзером guest, хотя я создал админа.  
+
+- В общем, было предпринято много вариантов. Я добавлял в **consumer.py** логин и пароль - не сработало:  
+
+```
+#!/usr/bin/env python3
+# coding=utf-8
+import pika
+
+connection = pika.BlockingConnection(pika.ConnectionParameters('192.168.1.88'))
+credentials = pika.PlainCredentials('admin', 'password') #вот эта строчка
+channel = connection.channel()
+channel.queue_declare(queue='hello')
+
+def callback(ch, method, properties, body):
+    print(" [x] Received %r" % body)
+
+
+channel.basic_consume('hello', callback, auto_ack=True)
+channel.start_consuming()
+```  
+
+  
+- Я прописывал логин и пароль в файле /etc/rabbitmq/rabbitmq.config - не сработало:
+  
+
+```
+[ { rabbit, [
+        { loopback_users, [ ] },
+        { tcp_listeners, [ 5672 ] },
+        { ssl_listeners, [ ] },
+        { default_pass, <<"admin">> },
+        { default_user, <<"password">> },
+        { default_vhost, <<"'/'">> },
+        { hipe_compile, false }
+] } ].
+```
+- Я вообще удалил пользователя guest из системы и он все-равно пытался лезть под guest :)  
+
+
+- Что сработало: я перезавел пользователя guest, задал ему сложный пароль и админские права и права на vhost. И только после этого все завелось.  
+Я думаю, что так не должно было быть, но по-другому у меня не вышло.  
+
+Скриншот с выполнением скрипта **consumer.py**:  
+
+ 
+![interface](img/last_cinsumer.JPG) 
+
