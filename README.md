@@ -129,8 +129,26 @@ rabbitmqctl stop_app
 rabbitmqctl reset
 ```  
 
- ...и подключим к кластеру:  
+ ...подключим к кластеру и запустим:  
 
 ```  
 rabbitmqctl join_cluster rabbit@rabbit1
+
+rabbitmqctl start_app
 ```
+
+- На **ноде1 (rabbit1)** cоздаем политику, которая позволяет зеркалировать очереди для всех узлов в кластере:  
+
+```
+rabbitmqctl set_policy ha-all ".*" '{"ha-mode":"all"}'  
+```  
+
+- Смотрим, что получилось:
+
+![interface](img/cluster.JPG)   
+
+![interface](img/policies.JPG)     
+
+![interface](img/cl_status1.JPG)   
+
+![interface](img/cl_status2.JPG) 
